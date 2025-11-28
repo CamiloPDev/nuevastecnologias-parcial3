@@ -1,17 +1,35 @@
 import React, { useState } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 
 function Login({ setUsuario }) {
-  const [user, setUser] = useState('');
-  const [pass, setPass] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Simulación de autenticación local
-    setUsuario(user || 'Usuario');
-    navigate('/dashboard');
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await login(correo, password);
+      
+      if (result.success) {
+        setUsuario(correo);
+        navigate('/dashboard');
+      } else {
+        setError(result.error || 'Credenciales incorrectas');
+      }
+    } catch (err) {
+      setError('Error al conectar con el servidor');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,11 +56,25 @@ function Login({ setUsuario }) {
         <h2 style={{
           color: '#aa7bc3', fontWeight: 700, fontSize: '1.6rem', marginBottom: '2rem'
         }}>Bienvenido</h2>
+        {error && (
+          <div style={{
+            background: '#fee2e2',
+            color: '#dc2626',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            fontSize: '0.9rem',
+            textAlign: 'center'
+          }}>
+            {error}
+          </div>
+        )}
         <input
-          type="text"
-          placeholder="Correo electrónico o usuario"
-          value={user}
-          onChange={e => setUser(e.target.value)}
+          type="email"
+          placeholder="Correo electrónico"
+          value={correo}
+          onChange={e => setCorreo(e.target.value)}
+          required
           style={{
             marginBottom: '1rem',
             width: '100%',
@@ -56,8 +88,9 @@ function Login({ setUsuario }) {
         <input
           type="password"
           placeholder="Contraseña"
-          value={pass}
-          onChange={e => setPass(e.target.value)}
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
           style={{
             marginBottom: '1rem',
             width: '100%',
@@ -75,9 +108,9 @@ function Login({ setUsuario }) {
           marginBottom: '1rem',
           textDecoration: 'none'
         }}>¿Olvidaste tu contraseña?</a>
-        <button type="submit" style={{
+        <button type="submit" disabled={loading} style={{
           width: '100%',
-          background: '#cfbaf0',
+          background: loading ? '#e0d4f7' : '#cfbaf0',
           border: 'none',
           borderRadius: '8px',
           padding: '0.8rem',
@@ -85,8 +118,20 @@ function Login({ setUsuario }) {
           fontWeight: 'bold',
           fontSize: '1rem',
           marginBottom: '1.2rem',
-          boxShadow: '0 2px 10px #eee'
-        }}>Iniciar sesión</button>
+          boxShadow: '0 2px 10px #eee',
+          cursor: loading ? 'not-allowed' : 'pointer'
+        }}>
+          {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+        </button>
+        <div style={{ 
+          textAlign: 'center', 
+          fontSize: '0.85rem', 
+          color: '#888',
+          marginBottom: '1rem'
+        }}>
+          Credenciales de prueba:<br/>
+          <strong>admin@nails.com</strong> / <strong>admin123</strong>
+        </div>
         <GoogleLogin
           onSuccess={cred => {
             // Usar el nombre real si lo recuperas del perfil Google

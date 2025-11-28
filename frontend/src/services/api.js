@@ -1,10 +1,24 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+
+// Función para obtener el token
+const getToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Función para obtener headers con autenticación
+const getAuthHeaders = () => {
+  const token = getToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
 
 // Función helper para manejar respuestas
 const handleResponse = async (response) => {
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.mensaje || 'Error en la petición');
+    throw new Error(error.mensaje || error.msg || 'Error en la petición');
   }
   return response.json();
 };
@@ -12,24 +26,30 @@ const handleResponse = async (response) => {
 // ==================== CLIENTES ====================
 export const clientesAPI = {
   obtenerTodos: async () => {
-    const response = await fetch(`${API_URL}/clientes`);
+    const response = await fetch(`${API_URL}/clientes`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerPorId: async (id) => {
-    const response = await fetch(`${API_URL}/clientes/${id}`);
+    const response = await fetch(`${API_URL}/clientes/${id}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   buscar: async (termino) => {
-    const response = await fetch(`${API_URL}/clientes/buscar/${termino}`);
+    const response = await fetch(`${API_URL}/clientes/buscar?q=${termino}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   crear: async (cliente) => {
     const response = await fetch(`${API_URL}/clientes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(cliente)
     });
     return handleResponse(response);
@@ -38,7 +58,7 @@ export const clientesAPI = {
   actualizar: async (id, cliente) => {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(cliente)
     });
     return handleResponse(response);
@@ -46,7 +66,8 @@ export const clientesAPI = {
 
   eliminar: async (id) => {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders()
     });
     return handleResponse(response);
   }
@@ -55,24 +76,30 @@ export const clientesAPI = {
 // ==================== SERVICIOS ====================
 export const serviciosAPI = {
   obtenerTodos: async () => {
-    const response = await fetch(`${API_URL}/servicios`);
+    const response = await fetch(`${API_URL}/servicios`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerActivos: async () => {
-    const response = await fetch(`${API_URL}/servicios/activos`);
+    const response = await fetch(`${API_URL}/servicios/activos`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerPorId: async (id) => {
-    const response = await fetch(`${API_URL}/servicios/${id}`);
+    const response = await fetch(`${API_URL}/servicios/${id}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   crear: async (servicio) => {
     const response = await fetch(`${API_URL}/servicios`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(servicio)
     });
     return handleResponse(response);
@@ -81,7 +108,7 @@ export const serviciosAPI = {
   actualizar: async (id, servicio) => {
     const response = await fetch(`${API_URL}/servicios/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(servicio)
     });
     return handleResponse(response);
@@ -89,7 +116,8 @@ export const serviciosAPI = {
 
   eliminar: async (id) => {
     const response = await fetch(`${API_URL}/servicios/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders()
     });
     return handleResponse(response);
   }
@@ -98,29 +126,37 @@ export const serviciosAPI = {
 // ==================== CITAS ====================
 export const citasAPI = {
   obtenerTodas: async () => {
-    const response = await fetch(`${API_URL}/citas`);
+    const response = await fetch(`${API_URL}/citas`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerHoy: async () => {
-    const response = await fetch(`${API_URL}/citas/hoy`);
+    const response = await fetch(`${API_URL}/citas/hoy`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerPorFecha: async (fecha) => {
-    const response = await fetch(`${API_URL}/citas/fecha/${fecha}`);
+    const response = await fetch(`${API_URL}/citas/dia/${fecha}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerPorCliente: async (clienteId) => {
-    const response = await fetch(`${API_URL}/citas/cliente/${clienteId}`);
+    const response = await fetch(`${API_URL}/citas/historial/${clienteId}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   verificarDisponibilidad: async (datos) => {
     const response = await fetch(`${API_URL}/citas/verificar-disponibilidad`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(datos)
     });
     return handleResponse(response);
@@ -129,7 +165,7 @@ export const citasAPI = {
   crear: async (cita) => {
     const response = await fetch(`${API_URL}/citas`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(cita)
     });
     return handleResponse(response);
@@ -138,15 +174,16 @@ export const citasAPI = {
   actualizar: async (id, cita) => {
     const response = await fetch(`${API_URL}/citas/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(cita)
     });
     return handleResponse(response);
   },
 
   cancelar: async (id) => {
-    const response = await fetch(`${API_URL}/citas/${id}`, {
-      method: 'DELETE'
+    const response = await fetch(`${API_URL}/citas/${id}/cancelar`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
     });
     return handleResponse(response);
   }
@@ -155,19 +192,23 @@ export const citasAPI = {
 // ==================== PAGOS ====================
 export const pagosAPI = {
   obtenerTodos: async () => {
-    const response = await fetch(`${API_URL}/pagos`);
+    const response = await fetch(`${API_URL}/pagos`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerPorRango: async (inicio, fin) => {
-    const response = await fetch(`${API_URL}/pagos/rango/${inicio}/${fin}`);
+    const response = await fetch(`${API_URL}/pagos/rango/${inicio}/${fin}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   registrar: async (pago) => {
     const response = await fetch(`${API_URL}/pagos`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(pago)
     });
     return handleResponse(response);
@@ -177,22 +218,54 @@ export const pagosAPI = {
 // ==================== REPORTES ====================
 export const reportesAPI = {
   obtenerDashboard: async () => {
-    const response = await fetch(`${API_URL}/reportes/dashboard`);
+    const response = await fetch(`${API_URL}/reportes/dashboard`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerIngresos: async (inicio, fin) => {
-    const response = await fetch(`${API_URL}/reportes/ingresos/${inicio}/${fin}`);
+    const response = await fetch(`${API_URL}/reportes/ingresos/${inicio}/${fin}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerServiciosPopulares: async (inicio, fin) => {
-    const response = await fetch(`${API_URL}/reportes/servicios-populares/${inicio}/${fin}`);
+    const response = await fetch(`${API_URL}/reportes/servicios-populares/${inicio}/${fin}`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
   },
 
   obtenerClientesFrecuentes: async () => {
-    const response = await fetch(`${API_URL}/reportes/clientes-frecuentes`);
+    const response = await fetch(`${API_URL}/reportes/clientes-frecuentes`, {
+      headers: getAuthHeaders()
+    });
     return handleResponse(response);
+  }
+};
+
+// ==================== AUTENTICACIÓN ====================
+export const authAPI = {
+  login: async (correo, password) => {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correo, password })
+    });
+    return handleResponse(response);
+  },
+
+  verify: async () => {
+    const response = await fetch(`${API_URL}/auth/verify`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 };
